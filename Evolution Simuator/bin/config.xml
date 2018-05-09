@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Colonies>
+	<Colony>
+		<color>RED</color>
+		<population>50</population>
+	</Colony>
+	<Colony>
+		<color>PINK</color>
+		<population>30</population>
+	</Colony>
+	<Colony>
+		<color>BLACK</color>
+		<population>70</population>
+	</Colony>
+	<Colony>
+		<color>YELLOW</color>
+		<population>37</population>
+	</Colony>
+</Colonies>

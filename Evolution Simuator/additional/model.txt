@@ -1,0 +1,7 @@
+			Evolution Simulator Input Model
+
+n	//number of colonies
+
+COLOR 1
+x1 y1
+Population 1
