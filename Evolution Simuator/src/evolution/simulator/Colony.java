@@ -20,8 +20,8 @@ public class Colony {
 	private int yPosition;	
 	private int femalePopulation;
 	private int reproductionCycle;
-	private int strength;
-	private int energy;
+	private double strength;
+	private double energy;
 	private int age;
 	
 	
@@ -81,18 +81,18 @@ public class Colony {
 	}
 	
 	
-	public int getStrength() {
+	public double getStrength() {
 		return strength;
 	}
-	public void setStrength(int strength) {
+	public void setStrength(double strength) {
 		this.strength = strength;
 	}
 	
 	
-	public int getEnergy() {
+	public double getEnergy() {
 		return energy;
 	}
-	public void setEnergy(int energy) {
+	public void setEnergy(double energy) {
 		this.energy = energy;
 	}
 }

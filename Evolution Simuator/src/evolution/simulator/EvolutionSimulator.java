@@ -49,21 +49,20 @@ public class EvolutionSimulator
         }
         for(int i = 0; i < 10000; i++){
         		evsim.level.setValue(i);
-        		
         		//aging and dying
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
                     if(evsim.mapPerson[x][y] != null){           		
                     		Random random = new Random();
                     		if(random.nextInt(100)+1 == 1 || random.nextInt(100)+1 == 2){
-                    			evsim.mapPerson[x][y].disease = 2;
+                    			evsim.mapPerson[x][y].disease[3] = true;
                     		} 
                         if(evsim.eq.eq == true && (x > evsim.eq.x  && x< evsim.eq.x + evsim.eq.size) && 
                         			(y > evsim.eq.y  && y < evsim.eq.y + evsim.eq.size)) {
                         		evsim.mapPerson[x][y] = null;
                         }
                     		if(evsim.mapPerson[x][y] != null) {
-                    			evsim.mapPerson[x][y].die(x, y, evsim.mapPerson, evsim.level.toInteger()); // NullPointer error, probably because of earthquakes
+                    			evsim.mapPerson[x][y].die(x, y, evsim.mapPerson, evsim.level.toInteger(), evsim.mapWealth[x][y]); // NullPointer error, probably because of earthquakes
                     		}
                     }
                 }
@@ -72,7 +71,7 @@ public class EvolutionSimulator
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
                     if(evsim.mapPerson[x][y] != null){
-                        evsim.mapPerson[x][y].move(x, y, evsim.mapPerson, evsim.frame);
+                        evsim.mapPerson[x][y].move(x, y, evsim.mapPerson, evsim.frame, evsim.mapWealth[x][y], evsim.colonies);
                     }
                     
                 }
@@ -82,7 +81,7 @@ public class EvolutionSimulator
                 for(int y = 0; y<HEIGHT; y++){
                 		if(evsim.mapPerson[x][y] != null){
                 			if(evsim.mapPerson[x][y].swimAngle == -1) {
-                				evsim.mapPerson[x][y].reproduction(x, y, evsim.level.toInteger(), evsim.mapPerson, evsim.frame);    
+                				evsim.mapPerson[x][y].reproduction(x, y, evsim.level.toInteger(), evsim.mapPerson, evsim.frame, evsim.mapWealth[x][y]);    
                 			}
                 		}
                 }
@@ -102,49 +101,7 @@ public class EvolutionSimulator
         frame = new WorldGraphics(this);
     }
     
-    //build colonies randomly in Africa
-    /*public void placeColony(int X1, int Y1, int X2, int Y2, int X3, int Y3, int X4, int Y4){
-        Random random = new Random();
-        int x, y;
-        int en;
-        //red colony
-        for(int i=0; i<70; i++){
-            do{
-                x = exponential(-50, 50, 4) + X1;
-                y = exponential(-50, 50, 4) + Y1;
-            }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-            en = random.nextInt(151)+150;
-            mapPerson[x][y] = new Person(0, random.nextInt(6)+5, i%2==0, 1, 0, diseaseRandom(), en, en, -1, -1);
-        }
-        //pink colony
-        for(int i=0; i<70; i++){
-            do{
-	            	x = exponential(-50, 50, 4) + X2;
-	            	y = exponential(-50, 50, 4) + Y2;
-            }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-            en = random.nextInt(151)+150;
-            mapPerson[x][y] = new Person(0, random.nextInt(6)+5, i%2==0, 2, 0, diseaseRandom(), en, en, -1, -1);
-        }
-        //black colony
-        for(int i=0; i<70; i++){
-            do{
-	            	x = exponential(-50, 50, 4) + X3;
-	            	y = exponential(-50, 50, 4) + Y3;
-            }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-            en = random.nextInt(151)+150;
-            mapPerson[x][y] = new Person(0, random.nextInt(6)+5, i%2==0, 3, 0, diseaseRandom(), en, en, -1, -1);
-        }
-        //yellow colony
-        for(int i=0; i<70; i++){
-            do{
-	            	x = exponential(-50, 50, 4) + X4;
-	            	y = exponential(-50, 50, 4) + Y4;
-            }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-            en = random.nextInt(151)+150;
-            mapPerson[x][y] = new Person(0, random.nextInt(6)+5, i%2==0, 4, 0, diseaseRandom(), en, en, -1, -1);
-        }
-        frame.repaint();
-    }*/
+    
     
     public void placeColonies(){
         Random random = new Random();
@@ -153,53 +110,31 @@ public class EvolutionSimulator
         for(Colony col : colonies) {
         		for(int i=0; i<col.getPopulation(); i++){
                 do{
-                    x = exponential(-50, 50, 4) + col.getxPosition();
-                    y = exponential(-50, 50, 4) + col.getyPosition();
+                    x = exponential(-50, 50, 2) + col.getxPosition();
+                    y = exponential(-50, 50, 2) + col.getyPosition();
                 }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-                en = random.nextInt(col.getEnergy())+15;
-                mapPerson[x][y] = new Person(0, random.nextInt(col.getStrength())+5, i < col.getFemalePopulation(), col, 
-                		0, diseaseRandom(), en, en, -1, -col.getReproductionCycle());
+                en = random.nextInt((int)col.getEnergy())+15;
+                mapPerson[x][y] = new Person(0, random.nextInt((int)col.getStrength())+5, i < col.getFemalePopulation(), col, 
+                		0, diseaseRandom(), en, en, -1, -col.getReproductionCycle(), mapWealth[x][y]);
             }
         }
         frame.repaint();
     }
-
-    /*public void colonyPopulations() {
-    	int type = 0;
-	    	for(int x = 0; x < WIDTH; x++) {
-	    		for(int y = 0; y < HEIGHT; y++) {
-	    			if(mapPerson[x][y] != null) {
-		    			type = mapPerson[x][y].colony;
-		        		switch(type){
-			    	        case 1:
-			    	            col[0]++;
-			    	            break;
-			    	        case 2:
-			    	        		col[1]++;
-			    	            break;
-			    	        case 3:
-			    	        		col[2]++;
-			    	            break;
-			    	        case 4:
-			    	        		col[3]++;
-			    	            break;
-		        		}
-	    			}
-	        	}
-	    	}
-    }*/
     
-    public double diseaseRandom(){
-
+    public boolean[] diseaseRandom() {
     		Random random = new Random();
-    		int disease = random.nextInt(10)+1;
+    		boolean[] Disease = new boolean[5];
+    		for(int i = 0; i < 5; i++) {
+    			Disease[i] = false;
+    		}
+    		int disease = random.nextInt(20)+1;
     		switch(disease) {
     			case 1:
-    				return 0.5;
+    				Disease[2] = true;
     			case 2:
-    				return 1;
+    				Disease[1] = true;
     		}
-    		return 0;
+    		return Disease;
     }
 
     public int exponential(int min, int max, int limit){
