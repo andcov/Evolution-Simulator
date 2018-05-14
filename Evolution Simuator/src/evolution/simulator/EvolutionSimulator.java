@@ -38,58 +38,10 @@ public class EvolutionSimulator
     private int[] col = new int[4];
     
     public static void main(String[] args) throws InterruptedException{
-    		EvolutionSimulator evsim = new EvolutionSimulator();	
+    	EvolutionSimulator evsim = new EvolutionSimulator();	
         evsim.placeColonies();
         TimeUnit.MILLISECONDS.sleep(3000);
-        //evolution life cycle
-        for (int xLoc = 0; xLoc<1357; xLoc++) {
-            for (int yLoc = 0; yLoc<628; yLoc++) {
-                //System.out.println(evsim.mapWealth[xLoc][yLoc]);
-            }
-        }
-        for(int i = 0; i < 10000; i++){
-        		evsim.level.setValue(i);
-        		//aging and dying
-            for(int x = 0; x<WIDTH; x++){
-                for(int y = 0; y<HEIGHT; y++){
-                    if(evsim.mapPerson[x][y] != null){           		
-                    		Random random = new Random();
-                    		if(random.nextInt(100)+1 == 1 || random.nextInt(100)+1 == 2){
-                    			evsim.mapPerson[x][y].disease[3] = true;
-                    		} 
-                        if(evsim.eq.eq == true && (x > evsim.eq.x  && x< evsim.eq.x + evsim.eq.size) && 
-                        			(y > evsim.eq.y  && y < evsim.eq.y + evsim.eq.size)) {
-                        		evsim.mapPerson[x][y] = null;
-                        }
-                    		if(evsim.mapPerson[x][y] != null) {
-                    			evsim.mapPerson[x][y].die(x, y, evsim.mapPerson, evsim.level.toInteger(), evsim.mapWealth[x][y]); // NullPointer error, probably because of earthquakes
-                    		}
-                    }
-                }
-            }
-            //moving
-            for(int x = 0; x<WIDTH; x++){
-                for(int y = 0; y<HEIGHT; y++){
-                    if(evsim.mapPerson[x][y] != null){
-                        evsim.mapPerson[x][y].move(x, y, evsim.mapPerson, evsim.frame, evsim.mapWealth[x][y], evsim.colonies);
-                    }
-                    
-                }
-            }
-            //reproduction 
-            for(int x = 0; x<WIDTH; x++){
-                for(int y = 0; y<HEIGHT; y++){
-                		if(evsim.mapPerson[x][y] != null){
-                			if(evsim.mapPerson[x][y].swimAngle == -1) {
-                				evsim.mapPerson[x][y].reproduction(x, y, evsim.level.toInteger(), evsim.mapPerson, evsim.frame, evsim.mapWealth[x][y]);    
-                			}
-                		}
-                }
-            }
-            //draw
-            evsim.frame.repaint();
-            TimeUnit.MILLISECONDS.sleep(7);
-        }
+        
     }  
 
     public EvolutionSimulator(){
@@ -101,7 +53,52 @@ public class EvolutionSimulator
         frame = new WorldGraphics(this);
     }
     
-    
+    public void run() {
+    	//evolution life cycle
+        for(int i = 0; i < 10000; i++){
+        		level.setValue(i);
+        		//aging and dying
+            for(int x = 0; x<WIDTH; x++){
+                for(int y = 0; y<HEIGHT; y++){
+                    if(mapPerson[x][y] != null){           		
+                    		Random random = new Random();
+                    		if(random.nextInt(100)+1 == 1 || random.nextInt(100)+1 == 2){
+                    			mapPerson[x][y].disease[3] = true;
+                    		} 
+                        if(eq.eq == true && (x > eq.x  && x< eq.x + eq.size) && 
+                        			(y > eq.y  && y < eq.y + eq.size)) {
+                        		mapPerson[x][y] = null;
+                        }
+                    		if(mapPerson[x][y] != null) {
+                    			mapPerson[x][y].die(x, y, mapPerson, level.toInteger(), mapWealth[x][y]); // NullPointer error, probably because of earthquakes
+                    		}
+                    }
+                }
+            }
+            //moving
+            for(int x = 0; x<WIDTH; x++){
+                for(int y = 0; y<HEIGHT; y++){
+                    if(mapPerson[x][y] != null){
+                       mapPerson[x][y].move(x, y, mapPerson, frame, mapWealth[x][y], colonies);
+                    }
+                    
+                }
+            }
+            //reproduction 
+            for(int x = 0; x<WIDTH; x++){
+                for(int y = 0; y<HEIGHT; y++){
+                		if(mapPerson[x][y] != null){
+                			if(mapPerson[x][y].swimAngle == -1) {
+                				mapPerson[x][y].reproduction(x, y, level.toInteger(), mapPerson, frame, mapWealth[x][y]);    
+                			}
+                		}
+                }
+            }
+            //draw
+            frame.repaint();
+            TimeUnit.MILLISECONDS.sleep(7);
+        }
+    }
     
     public void placeColonies(){
         Random random = new Random();

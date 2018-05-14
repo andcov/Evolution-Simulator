@@ -110,7 +110,7 @@ public class Person {
 	    	if(swimAngle == -1) {
 	        Random random = new Random(); 
 	        int dir;
-	        int x = 0, y = 0, i = 0, angle = 0;
+	        int x = 0, y = 0, i = 0, angle = 0, xFight = 0, yFight = 0;
 	        dir = random.nextInt(8)+1;
 	        for(i =0; i < 8; i++){
 	            switch(dir){
@@ -161,7 +161,10 @@ public class Person {
 	            if (frame.getColor(xLoc + x, yLoc + y) == 2) {
 	                if (map[xLoc + x][yLoc + y] == null){
 	            			break;
-	                } else if 
+	                } else if (!colony.equals(map[xLoc + x][yLoc + y].colony)) {
+	                	xFight = x;
+	                	yFight = y;
+	                }
 	            }else if(frame.getColor(xLoc + x, yLoc + y) == 1 && random.nextInt(500) + 1 == 1 
 	            			&& map[xLoc + x][yLoc + y] == null) {
 	            		swimAngle = angle;
@@ -175,13 +178,13 @@ public class Person {
 	        }
 	        if(swimAngle == -1) {
 	        	
-	        		if(map[xLoc + x][yLoc + y] != null) {	System.out.println(colonies.indexOf(colony) +" "+ colonies.indexOf(map[xLoc + x][yLoc + y].colony));}
+	        		//if(map[xLoc + x][yLoc + y] != null) {	System.out.println(colonies.indexOf(colony) +" "+ colonies.indexOf(map[xLoc + x][yLoc + y].colony));}
 		        if(map[xLoc + x][yLoc + y] == null){
 	                map[xLoc + x][yLoc + y] = map[xLoc][yLoc];
 	                map[xLoc][yLoc] = null;
 		        }//else if(colonies.indexOf(colony) != colonies.indexOf(map[xLoc + x][yLoc + y].colony)){
-		        else if(!colony.equals(map[xLoc + x][yLoc + y].colony)){
-            			fight(xLoc, yLoc, xLoc + x, yLoc + y, map);
+		        else if(xFight != 0 || yFight != 0){
+            			fight(xLoc, yLoc, xLoc + xFight, yLoc + yFight, map);
             			System.out.println("fight");
 	            }
 		        

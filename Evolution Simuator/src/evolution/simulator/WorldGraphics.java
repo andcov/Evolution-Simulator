@@ -15,12 +15,18 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.MouseInfo;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -32,6 +38,7 @@ public class WorldGraphics extends JFrame {
     private static final int SQUARE_SIZE = 10;
     private static final int GRAPH_SIZE = 150;
     private static final int YEAR_TIME = 12;
+    public static boolean isPaused = false;
     
     public Map map;
     private EvolutionSimulator evSimulator;
@@ -63,13 +70,26 @@ public class WorldGraphics extends JFrame {
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
-	    	for(int i = 0; i < GRAPH_SIZE; i++) {
-	    		for(int j = 0; j < this.evSimulator.colonies.size() + 1; j++) {
-	    			map.populationGraph[i][j] = 0;
-	    			if(j == this.evSimulator.colonies.size()) {
-	    				map.populationGraph[i][j] = -1;
-	    			}
-	    		}
+        JButton pauseButton = new JButton("Pause");
+        pauseButton.addActionListener(new ActionListener() {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		if(isPaused) {
+        			isPaused = false;
+        		}else {
+        			isPaused = true;
+        		}
+        	}
+        });
+        pauseButton.setBounds(0, 0, 0, 0);
+        map.add(pauseButton);
+    	for(int i = 0; i < GRAPH_SIZE; i++) {
+    		for(int j = 0; j < this.evSimulator.colonies.size() + 1; j++) {
+    			map.populationGraph[i][j] = 0;
+    			if(j == this.evSimulator.colonies.size()) {
+    				map.populationGraph[i][j] = -1;
+    			}
+    		}
 	    }
         //graph = new Graph();
         
@@ -113,13 +133,13 @@ public class WorldGraphics extends JFrame {
     }
     
     public class Map extends JPanel {
-        private BufferedImage img;
+        private BufferedImage img; 
         public int[][] populationGraph;
         
         public Map() {
         		populationGraph = new int[GRAPH_SIZE][evSimulator.colonies.size() + 1];
             try {
-                img = ImageIO.read(new File("/Users/test/Documents/GitHub/Evolution-Simulator/Evolution Simuator/additional/map.png"));        
+                img = ImageIO.read(new File("C:\\Users\\Andrei\\git\\Evolution-Simulator\\Evolution Simuator\\additional\\map.png"));        
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
