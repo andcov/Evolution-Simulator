@@ -185,7 +185,6 @@ public class Person {
 		        }//else if(colonies.indexOf(colony) != colonies.indexOf(map[xLoc + x][yLoc + y].colony)){
 		        else if(xFight != 0 || yFight != 0){
             			fight(xLoc, yLoc, xLoc + xFight, yLoc + yFight, map);
-            			System.out.println("fight");
 	            }
 		        
 		        if((int)this.adaptability == wealth) {
@@ -213,20 +212,18 @@ public class Person {
             map[locX2][locY2] = map[locX1][locY1];
             map[locX1][locY1] = null;
     	    		colony.setPopulation(colony.getPopulation() - 1);
-    	    		//System.out.println("fight");
+
             return 1;
         }else if(str1 < str2){
             map[locX2][locY2].experience++;
             map[locX1][locY1] = map[locX2][locY2];
             map[locX2][locY2] = null;
-    	    		colony.setPopulation(colony.getPopulation() - 1);
-    	    		//System.out.println("fight");
+    	    colony.setPopulation(colony.getPopulation() - 1);
             return 2;
         }
         map[locX2][locY2] = null;
         map[locX1][locY1] = null;
 	    colony.setPopulation(colony.getPopulation() - 2);
-	    //System.out.println("fight");
         return 0;
     }
     

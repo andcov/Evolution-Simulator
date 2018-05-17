@@ -26,6 +26,7 @@ public class EvolutionSimulator
 	public final static int WIDTH = 1357;
 	public final static int HEIGHT = 628;
     private static final int YEAR_TIME = 12;
+    public int[][] populationGraph;
 
 
 	MutableInt level;
@@ -36,28 +37,42 @@ public class EvolutionSimulator
     ArrayList<Colony> colonies;
     
     private int[] col = new int[4];
+    private int localLevel = 0;
     
     public static void main(String[] args) throws InterruptedException{
     	EvolutionSimulator evsim = new EvolutionSimulator();	
         evsim.placeColonies();
         TimeUnit.MILLISECONDS.sleep(3000);
-        
+        while(true) {
+        	evsim.run();
+        	TimeUnit.MILLISECONDS.sleep(50);
+        }   
     }  
 
     public EvolutionSimulator(){
-    		level = new MutableInt(0);
+    	level = new MutableInt(0);
         mapPerson = new Person[WIDTH][HEIGHT];
         eq = new NaturalDisaster();
         colonies = Configuration.initColonies();
         mapWealth = Configuration.initWealth();
         frame = new WorldGraphics(this);
+        populationGraph = new int[frame.GRAPH_SIZE][colonies.size() + 1];
+    	for(int i = 0; i < frame.GRAPH_SIZE; i++) {
+    		for(int j = 0; j < colonies.size(); j++) {
+    			populationGraph[i][j] = 0;
+    		}
+    		populationGraph[i][colonies.size()] = -1;
+	    }
     }
     
     public void run() {
+    	int i = 0;
+    	i++;
     	//evolution life cycle
-        for(int i = 0; i < 10000; i++){
-        		level.setValue(i);
-        		//aging and dying
+        while(!frame.isPaused){
+        	ppGraph();
+        	
+        	//aging and dying
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
                     if(mapPerson[x][y] != null){           		
@@ -87,17 +102,45 @@ public class EvolutionSimulator
             //reproduction 
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
-                		if(mapPerson[x][y] != null){
-                			if(mapPerson[x][y].swimAngle == -1) {
-                				mapPerson[x][y].reproduction(x, y, level.toInteger(), mapPerson, frame, mapWealth[x][y]);    
-                			}
-                		}
+            		if(mapPerson[x][y] != null){
+            			if(mapPerson[x][y].swimAngle == -1) {
+            				mapPerson[x][y].reproduction(x, y, level.toInteger(), mapPerson, frame, mapWealth[x][y]);    
+            			}
+            		}
                 }
             }
             //draw
             frame.repaint();
-            TimeUnit.MILLISECONDS.sleep(7);
+            
+            
+            
+            try {
+				TimeUnit.MILLISECONDS.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+            
+            localLevel++;
+            level.setValue(localLevel);
         }
+    }
+    
+    public void restart() {
+    	for(int x = 0; x < this.WIDTH; x++) {
+    		for(int y = 0; y < this.HEIGHT; y++) {
+        		mapPerson[x][y] = null;
+        	}
+    	}
+    	level.setValue(0);
+    	localLevel = 0;
+    	colonies = Configuration.initColonies();
+    	for(int i = 0; i < frame.GRAPH_SIZE; i++) {
+    		for(int j = 0; j < colonies.size(); j++) {
+    			populationGraph[i][j] = 0;
+    		}
+    		populationGraph[i][colonies.size()] = -1;
+	    }
+    	placeColonies();
     }
     
     public void placeColonies(){
@@ -110,12 +153,12 @@ public class EvolutionSimulator
                     x = exponential(-50, 50, 2) + col.getxPosition();
                     y = exponential(-50, 50, 2) + col.getyPosition();
                 }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-                en = random.nextInt((int)col.getEnergy())+15;
-                mapPerson[x][y] = new Person(0, random.nextInt((int)col.getStrength())+5, i < col.getFemalePopulation(), col, 
+                en = random.nextInt(Math.abs((int)col.getEnergy()))+15;
+                mapPerson[x][y] = new Person(0, random.nextInt(Math.abs((int)col.getStrength()))+5, i < col.getFemalePopulation(), col, 
                 		0, diseaseRandom(), en, en, -1, -col.getReproductionCycle(), mapWealth[x][y]);
             }
         }
-        frame.repaint();
+        //frame.repaint();
     }
     
     public boolean[] diseaseRandom() {
@@ -181,5 +224,38 @@ public class EvolutionSimulator
     				break;
     		}
     		
+    }
+    
+    private void ppGraph() {
+        for(int i = 1; i < frame.GRAPH_SIZE; i++) {
+	    		for(int j = 0; j < colonies.size()+1; j++) {
+	    			populationGraph[i-1][j] = populationGraph[i][j];
+	    		}
+        }
+	    int totalPopulation = 0;
+	    for(Colony colony : colonies) {
+	    		totalPopulation += colony.getPopulation();
+	    }
+	    double max = 0;
+	    int iMaxPos = -1;
+	    double sum100 = 0;
+		for(int i = 0; i < colonies.size(); i++) {
+			Colony colony = colonies.get(i);
+            populationGraph[frame.GRAPH_SIZE-1][i] = colony.getPopulation() * 100 / totalPopulation;	
+            sum100 += populationGraph[frame.GRAPH_SIZE-1][i];
+            if (max < populationGraph[frame.GRAPH_SIZE-1][i]) {
+            		max = populationGraph[frame.GRAPH_SIZE-1][i];
+            		iMaxPos = i;
+            }
+            
+		}
+		populationGraph[frame.GRAPH_SIZE-1][iMaxPos] += - sum100 + 100;
+		if(level.toInteger() % YEAR_TIME == 0) {
+			populationGraph[frame.GRAPH_SIZE-1][colonies.size()] = level.toInteger() / YEAR_TIME;
+			//System.out.println(map.populationGraph[GRAPH_SIZE-1][this.evSimulator.colonies.size()]);
+		}else {
+			populationGraph[frame.GRAPH_SIZE-1][colonies.size()] = -1;
+		}
+		 
     }
 }
