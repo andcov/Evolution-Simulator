@@ -5,32 +5,21 @@
  */
 package evolution.simulator;
 
-/**
- *
- * @author AndreiCo
- */
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.MouseInfo;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.font.FontRenderContext;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
-
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
 import org.apache.commons.lang.mutable.MutableInt;
 
 public class WorldGraphics extends JFrame {
@@ -64,7 +53,6 @@ public class WorldGraphics extends JFrame {
         super("Evolution Simultor");
         this.evSimulator = evSimulator;
         map = new Map();
-        //NaturalDisaster eq = new NaturalDisaster();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //setLayout(new BorderLayout());
         setLayout(new FlowLayout());
@@ -79,9 +67,10 @@ public class WorldGraphics extends JFrame {
         	public void actionPerformed(ActionEvent e) {
         		if(!isPaused) {
         			isPaused = true;
+        			pauseButton.setText("Resume");
         		}else {
         			isPaused = false;
-        			//evSimulator.run();
+        			pauseButton.setText("Pause");
         		}
         	}
         });
@@ -89,6 +78,8 @@ public class WorldGraphics extends JFrame {
         	@Override
         	public void actionPerformed(ActionEvent e) {
         		evSimulator.restart();
+        		isPaused = false;
+        		pauseButton.setText("Pause");
         	}
         });
         pauseButton.setBounds(0, 0, 0, 0);
@@ -164,7 +155,6 @@ public class WorldGraphics extends JFrame {
         @Override
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
-            System.out.println(evSimulator.level);
             Graphics2D g2d = (Graphics2D) g.create();
             
             int xPos;
@@ -247,10 +237,12 @@ public class WorldGraphics extends JFrame {
 				g2d.drawString("A:none", 1220, 628 -5 );
 			}
             
-            evSimulator.eq.earthquake();
-            if(evSimulator.eq.eq == true) {
-            		g2d.setColor(evSimulator.eq.color);
-            		g2d.fillRect(evSimulator.eq.ux, evSimulator.eq.uy, evSimulator.eq.size, evSimulator.eq.size);
+            if(evSimulator.isEarthquake) {
+	            evSimulator.eq.earthquake();
+	            if(evSimulator.eq.eq == true) {
+	            		g2d.setColor(evSimulator.eq.color);
+	            		g2d.fillRect(evSimulator.eq.ux, evSimulator.eq.uy, evSimulator.eq.size, evSimulator.eq.size);
+	            }
             }
 			
 			//ppGraph((int) (col4[0] + col3[0] + col2[0] + col1[0]), (int) col1[0], (int) col2[0], 
@@ -313,20 +305,6 @@ public class WorldGraphics extends JFrame {
         @Override
         public Dimension getPreferredSize() {
             return img == null ? new Dimension(200, 200) : new Dimension(img.getWidth(), img.getHeight());
-        }
-        
-        private Color getColor(int type) {
-            switch (type){
-                case 1:
-                    return Color.RED;
-                case 2:
-                    return Color.PINK;
-                case 3:
-                    return Color.BLACK;
-                case 4:
-                    return Color.YELLOW;
-            }
-            return Color.YELLOW;
         }
         
         /*private void addPerson(int x, int y){

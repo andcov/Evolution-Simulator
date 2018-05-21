@@ -16,7 +16,7 @@ public class Person {
 	public final static int WIDTH = 1357;
 	public final static int HEIGHT = 628;
 	private static final int STEPS = 15;
-    private static final int YEAR_TIME = 12;
+    private static final int YEAR_TIME = 10;
 
 	
 	//WorldGraphics frame = new WorldGraphics(map);
@@ -59,50 +59,49 @@ public class Person {
 			colony.setEnergy(colony.getEnergy() - energy*0.04);
 			energy = energy*0.96;
 			isEnergyModified = true;
-	    }else if(disease[0]) {
-	    		colony.setEnergy(colony.getEnergy() - energy*(0.1 - ((this.adaptability - wealth) * 0.0125)));
-			energy = energy*((this.adaptability - wealth) * 0.0125);
-	    		isEnergyModified = true;
 	    }
-    		if(disease[1]){
-    			colony.setStrength(colony.getStrength() - strength*0.04);
-	        strength = strength*0.96;
+	    if(disease[0]) {
+	    	colony.setEnergy(colony.getEnergy() - energy + energy*((this.adaptability - wealth) * 0.2));
+			energy = energy*((this.adaptability - wealth) * 0.2);
+	    	isEnergyModified = true;
 	    }
-    		if(disease[3]){
-    			colony.setEnergy(colony.getEnergy() - energy*0.04);
-    			energy = energy*0.96;
-    			isEnergyModified = true;
-    		}
-    		if(disease[4]){
+		if(disease[1]){
+			colony.setStrength(colony.getStrength() - strength*0.04);
+        strength = strength*0.96;
+	    }
+		if(disease[3]){
+			colony.setEnergy(colony.getEnergy() - energy*0.04);
+			energy = energy*0.96;
+			isEnergyModified = true;
+    	}
+		if(disease[4]){
 			colony.setStrength(colony.getStrength() - strength*0.42);
-	        strength = strength*0.58;
-	        for(int x = -3; x < 4; x++) {
-		        	if(xLoc + x >= 1357 || xLoc + x <= 0) {
-	    				break;
-	    			}
-	        		for(int y = -3; y < 4; y++) {
-	        			if(yLoc + y >= 628 || yLoc + y <= 0) {
-	        				break;
-	        			}
-	        			if(map[xLoc + x][yLoc + y] != null && map[xLoc + x][yLoc + y].colony == colony) {
-	        				map[xLoc + x][yLoc + y].disease[4] = true;
-	        			}
+		    strength = strength*0.58;
+		    for(int x = -3; x < 4; x++) {
+	        	if(xLoc + x >= 1357 || xLoc + x <= 0) {
+    				break;
+    			}
+        		for(int y = -3; y < 4; y++) {
+        			if(yLoc + y >= 628 || yLoc + y <= 0) {
+        				break;
+        			}
+        			if(map[xLoc + x][yLoc + y] != null && map[xLoc + x][yLoc + y].colony == colony) {
+        				map[xLoc + x][yLoc + y].disease[4] = true;
+        			}
 		        }
 	        }
 	    }
-    		if(isEnergyModified == false && Math.round(energy) <= Math.round(maxEnergy)) {
-    			colony.setEnergy(colony.getEnergy() + energy*0.05);
-    			energy = energy*1.05;
-    		}
+		if(isEnergyModified == false && Math.round(energy) <= Math.round(maxEnergy)) {
+			colony.setEnergy(colony.getEnergy() + energy*0.05);
+			energy = energy*1.05;
+		}
     		
 		if(level % YEAR_TIME == 0) {
 			age++;
 			colony.setAge(colony.getAge() + 1);
 		}
-		if(level % colony.getReproductionCycle() == 0) {
-			if(reproductionCycle > -1) {
-				reproductionCycle--;
-			}
+		if(reproductionCycle > -1) {
+			reproductionCycle--;
 		}
 	}
     
@@ -188,11 +187,11 @@ public class Person {
 	            }
 		        
 		        if((int)this.adaptability == wealth) {
-		        		adaptability = wealth;
+		        	adaptability = wealth;
 		        }else if((int)adaptability != wealth) {
-		        		adapt(wealth);
+		        	adapt(wealth);
 		        }else {
-		        		this.disease[0] = false;
+		        	this.disease[0] = false;
 		        }
 	        }else {
 	        		swim(xLoc, yLoc, map, frame);
@@ -209,16 +208,18 @@ public class Person {
                 + (map[locX2][locY2].strength - map[locX2][locY2].age) * 2.0 + map[locX1][locY1].energy * 3.0)/10.0;
         if(str1 > str2){
             map[locX1][locY1].experience++;
+            map[locX2][locY2].colony.setPopulation(map[locX2][locY2].colony.getPopulation() - 1);
             map[locX2][locY2] = map[locX1][locY1];
             map[locX1][locY1] = null;
-    	    		colony.setPopulation(colony.getPopulation() - 1);
+            
 
             return 1;
         }else if(str1 < str2){
             map[locX2][locY2].experience++;
+            map[locX1][locY1].colony.setPopulation(map[locX1][locY1].colony.getPopulation() - 1);
             map[locX1][locY1] = map[locX2][locY2];
             map[locX2][locY2] = null;
-    	    colony.setPopulation(colony.getPopulation() - 1);
+            
             return 2;
         }
         map[locX2][locY2] = null;
@@ -266,10 +267,12 @@ public class Person {
     			this.adaptability -= 0.5;
     		}else {
     			this.adaptability += 1;
+    			colony.setEnergy(colony.getEnergy() + energy - energy*(((wealth - this.adaptability) * 0.02 + 1)));
+    			energy = energy*((wealth - this.adaptability) * 0.02 + 1);
     		}
     }
     
-    public void reproduction(int xLoc, int yLoc, int generation, Person[][] map, WorldGraphics frame, int wealth){
+    public void reproduction(int xLoc, int yLoc, int generation, Person[][] map, WorldGraphics frame, int wealth, EvolutionSimulator evSim){
         if(map[xLoc][yLoc] != null){
             if(isReproduction()){
                 Random random = new Random(); 
@@ -360,9 +363,11 @@ public class Person {
                 	    colony.setEnergy(colony.getEnergy() + en);
                     Person newBorn = new Person(0, str, random.nextBoolean(), 
                     				colony, 0, diseaseChild(maxD), en, en, -1, -1, wealth);
-                    if(random.nextInt(400000) == 0){
-                    		newBorn.disease[4] = true;
-                    }
+                    if(evSim.isEpidemics) {
+	                    if(random.nextInt(400000) == 0){
+	                    		newBorn.disease[4] = true;
+	                    }
+	                }
                     map[xLoc + x][yLoc +y] = newBorn;
                 }
             }

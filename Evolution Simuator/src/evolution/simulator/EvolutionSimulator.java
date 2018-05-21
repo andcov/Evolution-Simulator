@@ -28,7 +28,9 @@ public class EvolutionSimulator
     private static final int YEAR_TIME = 12;
     public int[][] populationGraph;
 
-
+	public boolean isEpidemics;
+	public boolean isEarthquake;
+	Configuration config;
 	MutableInt level;
     Person[][] mapPerson;
     int[][] mapWealth;
@@ -45,13 +47,16 @@ public class EvolutionSimulator
         TimeUnit.MILLISECONDS.sleep(3000);
         while(true) {
         	evsim.run();
-        	TimeUnit.MILLISECONDS.sleep(50);
+        	//TimeUnit.MILLISECONDS.sleep(50);
         }   
     }  
 
     public EvolutionSimulator(){
     	level = new MutableInt(0);
         mapPerson = new Person[WIDTH][HEIGHT];
+        config = new Configuration();
+        isEpidemics = config.isEpidemics();
+        isEarthquake = config.isEarthquake();
         eq = new NaturalDisaster();
         colonies = Configuration.initColonies();
         mapWealth = Configuration.initWealth();
@@ -76,17 +81,19 @@ public class EvolutionSimulator
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
                     if(mapPerson[x][y] != null){           		
-                    		Random random = new Random();
-                    		if(random.nextInt(100)+1 == 1 || random.nextInt(100)+1 == 2){
-                    			mapPerson[x][y].disease[3] = true;
-                    		} 
-                        if(eq.eq == true && (x > eq.x  && x< eq.x + eq.size) && 
-                        			(y > eq.y  && y < eq.y + eq.size)) {
-                        		mapPerson[x][y] = null;
+                		Random random = new Random();
+                		if(random.nextInt(100)+1 == 1 || random.nextInt(100)+1 == 2){
+                			mapPerson[x][y].disease[3] = true;
+                		} 
+                        if(isEarthquake) {
+	                        if(eq.eq == true && (x > eq.x  && x< eq.x + eq.size) && 
+	                        			(y > eq.y  && y < eq.y + eq.size)) {
+	                        		mapPerson[x][y] = null;
+	                        }
                         }
-                    		if(mapPerson[x][y] != null) {
-                    			mapPerson[x][y].die(x, y, mapPerson, level.toInteger(), mapWealth[x][y]); // NullPointer error, probably because of earthquakes
-                    		}
+                		if(mapPerson[x][y] != null) {
+                			mapPerson[x][y].die(x, y, mapPerson, level.toInteger(), mapWealth[x][y]); // NullPointer error, probably because of earthquakes
+                		}
                     }
                 }
             }
@@ -104,7 +111,7 @@ public class EvolutionSimulator
                 for(int y = 0; y<HEIGHT; y++){
             		if(mapPerson[x][y] != null){
             			if(mapPerson[x][y].swimAngle == -1) {
-            				mapPerson[x][y].reproduction(x, y, level.toInteger(), mapPerson, frame, mapWealth[x][y]);    
+            				mapPerson[x][y].reproduction(x, y, level.toInteger(), mapPerson, frame, mapWealth[x][y], this);    
             			}
             		}
                 }
@@ -126,6 +133,12 @@ public class EvolutionSimulator
     }
     
     public void restart() {
+    	frame.isPaused = true;
+        try {
+			TimeUnit.MILLISECONDS.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
     	for(int x = 0; x < this.WIDTH; x++) {
     		for(int y = 0; y < this.HEIGHT; y++) {
         		mapPerson[x][y] = null;
@@ -141,6 +154,7 @@ public class EvolutionSimulator
     		populationGraph[i][colonies.size()] = -1;
 	    }
     	placeColonies();
+        frame.isPaused = false;
     }
     
     public void placeColonies(){
@@ -252,7 +266,6 @@ public class EvolutionSimulator
 		populationGraph[frame.GRAPH_SIZE-1][iMaxPos] += - sum100 + 100;
 		if(level.toInteger() % YEAR_TIME == 0) {
 			populationGraph[frame.GRAPH_SIZE-1][colonies.size()] = level.toInteger() / YEAR_TIME;
-			//System.out.println(map.populationGraph[GRAPH_SIZE-1][this.evSimulator.colonies.size()]);
 		}else {
 			populationGraph[frame.GRAPH_SIZE-1][colonies.size()] = -1;
 		}
