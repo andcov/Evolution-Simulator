@@ -1,75 +1,70 @@
 {
     "colonies": [
         {
+        	"_comment": "red",
+        
             "colorRed": "255",
             "colorGreen": "0",
             "colorBlue": "0",
-            "population": "70",
-            "xPosition": "678",
-            "yPosition": "314",
-            "alliances": [
-                {"alliance":""},
-                {"alliance":""},
-            ],
-
-            "femalePopulation": "1",
+            "population": "90",
+            "xPosition": "830",
+            "yPosition": "180",
+            
+            "femalePopulation": "45",
             "reproductionCycle": "2",
-            "strength": "5",
-            "energy": "5"
+            "strength": "40",
+            "energy": "15"
         },
         {
+        	"_comment": "yellow",
+        	
+            "colorRed": "255",
+            "colorGreen": "255",
+            "colorBlue": "0",
+            "population": "90",
+            "xPosition": "910",
+            "yPosition": "180",
+
+            "femalePopulation": "45",
+            "reproductionCycle": "2",
+            "strength": "40",
+            "energy": "15"
+        },
+        {
+        	"_comment": "pink",
+        
             "colorRed": "255",
             "colorGreen": "105",
             "colorBlue": "180",
-            "population": "70",
-            "xPosition": "590",
-            "yPosition": "314",
+            "population": "90",
+            "xPosition": "910",
+            "yPosition": "120",
 
-            "femalePopulation": "1",
+            "femalePopulation": "45",
             "reproductionCycle": "2",
-            "strength": "5",
-            "energy": "5"
+            "strength": "40",
+            "energy": "15"
         },
         {
+        	"_comment": "black",
+        
             "colorRed": "0",
             "colorGreen": "0",
             "colorBlue": "0",
-            "population": "70",
-            "xPosition": "550",
-            "yPosition": "270",
+            "population": "90",
+            "xPosition": "830",
+            "yPosition": "120",
 
-            "femalePopulation": "1",
+            "femalePopulation": "45",
             "reproductionCycle": "2",
-            "strength": "5",
-            "energy": "5"
-        },
-        {
-            "colorRed": "255",
-            "colorGreen": "255",
-            "colorBlue": "0",
-            "population": "70",
-            "xPosition": "678",
-            "yPosition": "450",
-
-            "femalePopulation": "1",
-            "reproductionCycle": "2",
-            "strength": "5",
-            "energy": "5"
-        },
-        {
-            "colorRed": "255",
-            "colorGreen": "255",
-            "colorBlue": "255",
-            "population": "70",
-            "xPosition": "678",
-            "yPosition": "350",
-
-            "femalePopulation": "1",
-            "reproductionCycle": "2",
-            "strength": "5",
-            "energy": "5"
+            "strength": "40",
+            "energy": "15"
         },
     ],
+    
+    "earthquake": "off",
+    "epidemics": "on",
+    
     "defaultWealth": "3",
     "wealthRegions": [
         {

@@ -5,33 +5,30 @@
  */
 package evolution.simulator;
 
-/**
- *
- * @author AndreiCo
- */
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.MouseInfo;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
-
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
 import org.apache.commons.lang.mutable.MutableInt;
 
 public class WorldGraphics extends JFrame {
 	//static Graph graph;
     private static final int PERSON_SIZE = 1;
     private static final int SQUARE_SIZE = 10;
-    private static final int GRAPH_SIZE = 150;
-    private static final int YEAR_TIME = 12;
+    public static final int GRAPH_SIZE = 150;
+    private static final int YEAR_TIME = 10;
+    public static boolean isPaused = false;
     
     public Map map;
     private EvolutionSimulator evSimulator;
@@ -56,38 +53,54 @@ public class WorldGraphics extends JFrame {
         super("Evolution Simultor");
         this.evSimulator = evSimulator;
         map = new Map();
-        //NaturalDisaster eq = new NaturalDisaster();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+        //setLayout(new BorderLayout());
+        setLayout(new FlowLayout());
         getContentPane().add(map);
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
-	    	for(int i = 0; i < GRAPH_SIZE; i++) {
-	    		for(int j = 0; j < this.evSimulator.colonies.size() + 1; j++) {
-	    			map.populationGraph[i][j] = 0;
-	    			if(j == this.evSimulator.colonies.size()) {
-	    				map.populationGraph[i][j] = -1;
-	    			}
-	    		}
-	    }
-        //graph = new Graph();
-        
+        JButton pauseButton = new JButton("Pause");
+        JButton restartButton = new JButton("Restart");
+        pauseButton.addActionListener(new ActionListener() {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		if(!isPaused) {
+        			isPaused = true;
+        			pauseButton.setText("Resume");
+        		}else {
+        			isPaused = false;
+        			pauseButton.setText("Pause");
+        		}
+        	}
+        });
+        restartButton.addActionListener(new ActionListener() {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		evSimulator.restart();
+        		isPaused = false;
+        		pauseButton.setText("Pause");
+        	}
+        });
+        pauseButton.setBounds(0, 0, 0, 0);
+        restartButton.setBounds(0, 0, 0, 0);
+        map.add(restartButton);
+        map.add(pauseButton);        
     }
     
-    private void ppGraph() {
+    /*private void ppGraph() {
         for(int i = 1; i < GRAPH_SIZE; i++) {
-	    		for(int j = 0; j < this.evSimulator.colonies.size(); j++) {
+	    		for(int j = 0; j < this.evSimulator.colonies.size()+1; j++) {
 	    			map.populationGraph[i-1][j] = map.populationGraph[i][j];
 	    		}
         }
-    	    int totalPopulation = 0;
-    	    for(Colony colony : this.evSimulator.colonies) {
-    	    		totalPopulation += colony.getPopulation();
-    	    }
-    	    double max = 0;
-    	    int iMaxPos = -1;
-    	    double sum100 = 0;
+	    int totalPopulation = 0;
+	    for(Colony colony : this.evSimulator.colonies) {
+	    		totalPopulation += colony.getPopulation();
+	    }
+	    double max = 0;
+	    int iMaxPos = -1;
+	    double sum100 = 0;
 		for(int i = 0; i < this.evSimulator.colonies.size(); i++) {
 			Colony colony = this.evSimulator.colonies.get(i);
             map.populationGraph[GRAPH_SIZE-1][i] = colony.getPopulation() * 100 / totalPopulation;	
@@ -99,27 +112,25 @@ public class WorldGraphics extends JFrame {
             
 		}
 		map.populationGraph[GRAPH_SIZE-1][iMaxPos] += - sum100 + 100;
-		
 		if(evSimulator.level.toInteger() % YEAR_TIME == 0) {
 			map.populationGraph[GRAPH_SIZE-1][this.evSimulator.colonies.size()] = evSimulator.level.toInteger() / YEAR_TIME;
+			//System.out.println(map.populationGraph[GRAPH_SIZE-1][this.evSimulator.colonies.size()]);
 		}else {
 			map.populationGraph[GRAPH_SIZE-1][this.evSimulator.colonies.size()] = -1;
 		}
 		 
-    }
+    }*/
     
     public int getColor(int x, int y) {
     		return map.pixelColor(x, y);
     }
     
     public class Map extends JPanel {
-        private BufferedImage img;
-        public int[][] populationGraph;
+        private BufferedImage img; 
         
         public Map() {
-        		populationGraph = new int[GRAPH_SIZE][evSimulator.colonies.size() + 1];
             try {
-                img = ImageIO.read(new File("/Users/test/Documents/GitHub/Evolution-Simulator/Evolution Simuator/additional/map.png"));        
+                img = ImageIO.read(new File("C:\\Users\\Andrei\\git\\Evolution-Simulator\\Evolution Simuator\\additional\\map.png"));        
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -145,6 +156,7 @@ public class WorldGraphics extends JFrame {
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2d = (Graphics2D) g.create();
+            
             int xPos;
             int yPos;
             if (img != null) {
@@ -225,36 +237,37 @@ public class WorldGraphics extends JFrame {
 				g2d.drawString("A:none", 1220, 628 -5 );
 			}
             
-            evSimulator.eq.earthquake();
-            if(evSimulator.eq.eq == true) {
-            		g2d.setColor(evSimulator.eq.color);
-            		g2d.fillRect(evSimulator.eq.ux, evSimulator.eq.uy, evSimulator.eq.size, evSimulator.eq.size);
+            if(evSimulator.isEarthquake) {
+	            evSimulator.eq.earthquake();
+	            if(evSimulator.eq.eq == true) {
+	            		g2d.setColor(evSimulator.eq.color);
+	            		g2d.fillRect(evSimulator.eq.ux, evSimulator.eq.uy, evSimulator.eq.size, evSimulator.eq.size);
+	            }
             }
 			
 			//ppGraph((int) (col4[0] + col3[0] + col2[0] + col1[0]), (int) col1[0], (int) col2[0], 
 			//		(int) col3[0], (int) col4[0]);
 			///*
             
-            ppGraph();
+            //ppGraph();
 			g2d.setColor(Color.WHITE);
             g2d.fillRect(0, 528, GRAPH_SIZE, 100);
             for(int i=0; i<GRAPH_SIZE; i++) {
             		int previousPopulationSum = 0;
 	            	for(int j = 0; j < evSimulator.colonies.size(); j++) {
-	            		previousPopulationSum += populationGraph[i][j];
+	            		previousPopulationSum += evSimulator.populationGraph[i][j];
 	            		g2d.setColor(evSimulator.colonies.get(j).getColor());
-	            		g2d.fillRect(i, 628 - previousPopulationSum, 1, populationGraph[i][j]);
+	            		g2d.fillRect(i, 628 - previousPopulationSum, 1, evSimulator.populationGraph[i][j]);
 	        		}
-        			if(populationGraph[i][evSimulator.colonies.size()] != -1) {
-	        			
+        			if(evSimulator.populationGraph[i][evSimulator.colonies.size()] != -1) {
 	        			Color color = new Color(128, 0, 128);
-	            		if(populationGraph[i][evSimulator.colonies.size()] % 2 == 0) {
+	            		if(evSimulator.populationGraph[i][evSimulator.colonies.size()] % 2 == 0) {
 		        			g2d.setColor(color);
 		        			g2d.fillRect(i, 628-100, 1, 100);
 	            		}
-	            		if(populationGraph[i][evSimulator.colonies.size()] % 10 == 0) {
+	            		if(evSimulator.populationGraph[i][evSimulator.colonies.size()] % 10 == 0) {
 	            			g2d.setColor(Color.WHITE);
-	            			g2d.drawString(Integer.toString(populationGraph[i][4]), i, 628-100-2);
+	            			g2d.drawString(Integer.toString(evSimulator.populationGraph[i][4]), i, 628-100-2);
 	            		}
 	        		}
 	        }
@@ -292,20 +305,6 @@ public class WorldGraphics extends JFrame {
         @Override
         public Dimension getPreferredSize() {
             return img == null ? new Dimension(200, 200) : new Dimension(img.getWidth(), img.getHeight());
-        }
-        
-        private Color getColor(int type) {
-            switch (type){
-                case 1:
-                    return Color.RED;
-                case 2:
-                    return Color.PINK;
-                case 3:
-                    return Color.BLACK;
-                case 4:
-                    return Color.YELLOW;
-            }
-            return Color.YELLOW;
         }
         
         /*private void addPerson(int x, int y){

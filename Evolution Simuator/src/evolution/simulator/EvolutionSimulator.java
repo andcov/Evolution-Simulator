@@ -26,8 +26,11 @@ public class EvolutionSimulator
 	public final static int WIDTH = 1357;
 	public final static int HEIGHT = 628;
     private static final int YEAR_TIME = 12;
+    public int[][] populationGraph;
 
-
+	public boolean isEpidemics;
+	public boolean isEarthquake;
+	Configuration config;
 	MutableInt level;
     Person[][] mapPerson;
     int[][] mapWealth;
@@ -36,43 +39,69 @@ public class EvolutionSimulator
     ArrayList<Colony> colonies;
     
     private int[] col = new int[4];
+    private int localLevel = 0;
     
     public static void main(String[] args) throws InterruptedException{
-    		EvolutionSimulator evsim = new EvolutionSimulator();	
+    	EvolutionSimulator evsim = new EvolutionSimulator();	
         evsim.placeColonies();
         TimeUnit.MILLISECONDS.sleep(3000);
-        //evolution life cycle
-        for (int xLoc = 0; xLoc<1357; xLoc++) {
-            for (int yLoc = 0; yLoc<628; yLoc++) {
-                //System.out.println(evsim.mapWealth[xLoc][yLoc]);
-            }
-        }
-        for(int i = 0; i < 10000; i++){
-        		evsim.level.setValue(i);
-        		
-        		//aging and dying
+        while(true) {
+        	evsim.run();
+        	//TimeUnit.MILLISECONDS.sleep(50);
+        }   
+    }  
+
+    public EvolutionSimulator(){
+    	level = new MutableInt(0);
+        mapPerson = new Person[WIDTH][HEIGHT];
+        config = new Configuration();
+        isEpidemics = config.isEpidemics();
+        isEarthquake = config.isEarthquake();
+        eq = new NaturalDisaster();
+        colonies = Configuration.initColonies();
+        mapWealth = Configuration.initWealth();
+        frame = new WorldGraphics(this);
+        populationGraph = new int[frame.GRAPH_SIZE][colonies.size() + 1];
+    	for(int i = 0; i < frame.GRAPH_SIZE; i++) {
+    		for(int j = 0; j < colonies.size(); j++) {
+    			populationGraph[i][j] = 0;
+    		}
+    		populationGraph[i][colonies.size()] = -1;
+	    }
+    }
+    
+    public void run() {
+    	int i = 0;
+    	i++;
+    	//evolution life cycle
+        while(!frame.isPaused){
+        	ppGraph();
+        	
+        	//aging and dying
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
-                    if(evsim.mapPerson[x][y] != null){           		
-                    		Random random = new Random();
-                    		if(random.nextInt(100)+1 == 1 || random.nextInt(100)+1 == 2){
-                    			evsim.mapPerson[x][y].disease = 2;
-                    		} 
-                        if(evsim.eq.eq == true && (x > evsim.eq.x  && x< evsim.eq.x + evsim.eq.size) && 
-                        			(y > evsim.eq.y  && y < evsim.eq.y + evsim.eq.size)) {
-                        		evsim.mapPerson[x][y] = null;
+                    if(mapPerson[x][y] != null){           		
+                		Random random = new Random();
+                		if(random.nextInt(100)+1 == 1 || random.nextInt(100)+1 == 2){
+                			mapPerson[x][y].disease[3] = true;
+                		} 
+                        if(isEarthquake) {
+	                        if(eq.eq == true && (x > eq.x  && x< eq.x + eq.size) && 
+	                        			(y > eq.y  && y < eq.y + eq.size)) {
+	                        		mapPerson[x][y] = null;
+	                        }
                         }
-                    		if(evsim.mapPerson[x][y] != null) {
-                    			evsim.mapPerson[x][y].die(x, y, evsim.mapPerson, evsim.level.toInteger()); // NullPointer error, probably because of earthquakes
-                    		}
+                		if(mapPerson[x][y] != null) {
+                			mapPerson[x][y].die(x, y, mapPerson, level.toInteger(), mapWealth[x][y]); // NullPointer error, probably because of earthquakes
+                		}
                     }
                 }
             }
             //moving
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
-                    if(evsim.mapPerson[x][y] != null){
-                        evsim.mapPerson[x][y].move(x, y, evsim.mapPerson, evsim.frame);
+                    if(mapPerson[x][y] != null){
+                       mapPerson[x][y].move(x, y, mapPerson, frame, mapWealth[x][y], colonies);
                     }
                     
                 }
@@ -80,71 +109,53 @@ public class EvolutionSimulator
             //reproduction 
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
-                		if(evsim.mapPerson[x][y] != null){
-                			if(evsim.mapPerson[x][y].swimAngle == -1) {
-                				evsim.mapPerson[x][y].reproduction(x, y, evsim.level.toInteger(), evsim.mapPerson, evsim.frame);    
-                			}
-                		}
+            		if(mapPerson[x][y] != null){
+            			if(mapPerson[x][y].swimAngle == -1) {
+            				mapPerson[x][y].reproduction(x, y, level.toInteger(), mapPerson, frame, mapWealth[x][y], this);    
+            			}
+            		}
                 }
             }
             //draw
-            evsim.frame.repaint();
-            TimeUnit.MILLISECONDS.sleep(7);
+            frame.repaint();
+            
+            
+            
+            try {
+				TimeUnit.MILLISECONDS.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+            
+            localLevel++;
+            level.setValue(localLevel);
         }
-    }  
-
-    public EvolutionSimulator(){
-    		level = new MutableInt(0);
-        mapPerson = new Person[WIDTH][HEIGHT];
-        eq = new NaturalDisaster();
-        colonies = Configuration.initColonies();
-        mapWealth = Configuration.initWealth();
-        frame = new WorldGraphics(this);
     }
     
-    //build colonies randomly in Africa
-    /*public void placeColony(int X1, int Y1, int X2, int Y2, int X3, int Y3, int X4, int Y4){
-        Random random = new Random();
-        int x, y;
-        int en;
-        //red colony
-        for(int i=0; i<70; i++){
-            do{
-                x = exponential(-50, 50, 4) + X1;
-                y = exponential(-50, 50, 4) + Y1;
-            }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-            en = random.nextInt(151)+150;
-            mapPerson[x][y] = new Person(0, random.nextInt(6)+5, i%2==0, 1, 0, diseaseRandom(), en, en, -1, -1);
-        }
-        //pink colony
-        for(int i=0; i<70; i++){
-            do{
-	            	x = exponential(-50, 50, 4) + X2;
-	            	y = exponential(-50, 50, 4) + Y2;
-            }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-            en = random.nextInt(151)+150;
-            mapPerson[x][y] = new Person(0, random.nextInt(6)+5, i%2==0, 2, 0, diseaseRandom(), en, en, -1, -1);
-        }
-        //black colony
-        for(int i=0; i<70; i++){
-            do{
-	            	x = exponential(-50, 50, 4) + X3;
-	            	y = exponential(-50, 50, 4) + Y3;
-            }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-            en = random.nextInt(151)+150;
-            mapPerson[x][y] = new Person(0, random.nextInt(6)+5, i%2==0, 3, 0, diseaseRandom(), en, en, -1, -1);
-        }
-        //yellow colony
-        for(int i=0; i<70; i++){
-            do{
-	            	x = exponential(-50, 50, 4) + X4;
-	            	y = exponential(-50, 50, 4) + Y4;
-            }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-            en = random.nextInt(151)+150;
-            mapPerson[x][y] = new Person(0, random.nextInt(6)+5, i%2==0, 4, 0, diseaseRandom(), en, en, -1, -1);
-        }
-        frame.repaint();
-    }*/
+    public void restart() {
+    	frame.isPaused = true;
+        try {
+			TimeUnit.MILLISECONDS.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+    	for(int x = 0; x < this.WIDTH; x++) {
+    		for(int y = 0; y < this.HEIGHT; y++) {
+        		mapPerson[x][y] = null;
+        	}
+    	}
+    	level.setValue(0);
+    	localLevel = 0;
+    	colonies = Configuration.initColonies();
+    	for(int i = 0; i < frame.GRAPH_SIZE; i++) {
+    		for(int j = 0; j < colonies.size(); j++) {
+    			populationGraph[i][j] = 0;
+    		}
+    		populationGraph[i][colonies.size()] = -1;
+	    }
+    	placeColonies();
+        frame.isPaused = false;
+    }
     
     public void placeColonies(){
         Random random = new Random();
@@ -153,53 +164,31 @@ public class EvolutionSimulator
         for(Colony col : colonies) {
         		for(int i=0; i<col.getPopulation(); i++){
                 do{
-                    x = exponential(-50, 50, 4) + col.getxPosition();
-                    y = exponential(-50, 50, 4) + col.getyPosition();
+                    x = exponential(-50, 50, 2) + col.getxPosition();
+                    y = exponential(-50, 50, 2) + col.getyPosition();
                 }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
-                en = random.nextInt(col.getEnergy())+15;
-                mapPerson[x][y] = new Person(0, random.nextInt(col.getStrength())+5, i < col.getFemalePopulation(), col, 
-                		0, diseaseRandom(), en, en, -1, -col.getReproductionCycle());
+                en = random.nextInt(Math.abs((int)col.getEnergy()))+15;
+                mapPerson[x][y] = new Person(0, random.nextInt(Math.abs((int)col.getStrength()))+5, i < col.getFemalePopulation(), col, 
+                		0, diseaseRandom(), en, en, -1, -col.getReproductionCycle(), mapWealth[x][y]);
             }
         }
-        frame.repaint();
+        //frame.repaint();
     }
-
-    /*public void colonyPopulations() {
-    	int type = 0;
-	    	for(int x = 0; x < WIDTH; x++) {
-	    		for(int y = 0; y < HEIGHT; y++) {
-	    			if(mapPerson[x][y] != null) {
-		    			type = mapPerson[x][y].colony;
-		        		switch(type){
-			    	        case 1:
-			    	            col[0]++;
-			    	            break;
-			    	        case 2:
-			    	        		col[1]++;
-			    	            break;
-			    	        case 3:
-			    	        		col[2]++;
-			    	            break;
-			    	        case 4:
-			    	        		col[3]++;
-			    	            break;
-		        		}
-	    			}
-	        	}
-	    	}
-    }*/
     
-    public double diseaseRandom(){
-
+    public boolean[] diseaseRandom() {
     		Random random = new Random();
-    		int disease = random.nextInt(10)+1;
+    		boolean[] Disease = new boolean[5];
+    		for(int i = 0; i < 5; i++) {
+    			Disease[i] = false;
+    		}
+    		int disease = random.nextInt(20)+1;
     		switch(disease) {
     			case 1:
-    				return 0.5;
+    				Disease[2] = true;
     			case 2:
-    				return 1;
+    				Disease[1] = true;
     		}
-    		return 0;
+    		return Disease;
     }
 
     public int exponential(int min, int max, int limit){
@@ -249,5 +238,37 @@ public class EvolutionSimulator
     				break;
     		}
     		
+    }
+    
+    private void ppGraph() {
+        for(int i = 1; i < frame.GRAPH_SIZE; i++) {
+	    		for(int j = 0; j < colonies.size()+1; j++) {
+	    			populationGraph[i-1][j] = populationGraph[i][j];
+	    		}
+        }
+	    int totalPopulation = 0;
+	    for(Colony colony : colonies) {
+	    		totalPopulation += colony.getPopulation();
+	    }
+	    double max = 0;
+	    int iMaxPos = -1;
+	    double sum100 = 0;
+		for(int i = 0; i < colonies.size(); i++) {
+			Colony colony = colonies.get(i);
+            populationGraph[frame.GRAPH_SIZE-1][i] = colony.getPopulation() * 100 / totalPopulation;	
+            sum100 += populationGraph[frame.GRAPH_SIZE-1][i];
+            if (max < populationGraph[frame.GRAPH_SIZE-1][i]) {
+            		max = populationGraph[frame.GRAPH_SIZE-1][i];
+            		iMaxPos = i;
+            }
+            
+		}
+		populationGraph[frame.GRAPH_SIZE-1][iMaxPos] += - sum100 + 100;
+		if(level.toInteger() % YEAR_TIME == 0) {
+			populationGraph[frame.GRAPH_SIZE-1][colonies.size()] = level.toInteger() / YEAR_TIME;
+		}else {
+			populationGraph[frame.GRAPH_SIZE-1][colonies.size()] = -1;
+		}
+		 
     }
 }

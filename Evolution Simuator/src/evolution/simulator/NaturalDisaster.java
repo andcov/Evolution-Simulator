@@ -7,7 +7,7 @@ public class NaturalDisaster {
 	public  int size;
 	public  int x;
 	public  int y;
-	public  int ux;//git   csdsdf
+	public  int ux;
 	public  int uy;
 	public  boolean eq = false;
 	private  int times = 3;

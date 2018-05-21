@@ -5,6 +5,7 @@
  */
 package evolution.simulator;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -15,7 +16,7 @@ public class Person {
 	public final static int WIDTH = 1357;
 	public final static int HEIGHT = 628;
 	private static final int STEPS = 15;
-    private static final int YEAR_TIME = 12;
+    private static final int YEAR_TIME = 10;
 
 	
 	//WorldGraphics frame = new WorldGraphics(map);
@@ -23,16 +24,17 @@ public class Person {
     public int age;
     public int experience;
     public double strength;
-    public int energy;
-    public int maxEnergy;
+    public double energy;
+    public double maxEnergy;
     public boolean sex;
     public Colony colony;
-    public double disease;
+    public boolean[] disease;
     public int swimAngle;
     public int reproductionCycle;
+    public double adaptability;
     
-    public Person(int age, double strength, boolean sex, Colony colony, int experience, double disease, int energy, 
-    		int maxEnergy, int swimAngle, int reproductionCycle){
+    public Person(int age, double strength, boolean sex, Colony colony, int experience, boolean[] disease, double energy, 
+    		double maxEnergy, int swimAngle, int reproductionCycle, int adaptability){
         this.age = age;
         this.strength = strength;
         this.sex = sex;
@@ -43,58 +45,71 @@ public class Person {
         this.maxEnergy = maxEnergy;
         this.swimAngle = swimAngle;
         this.reproductionCycle = reproductionCycle;
+        this.adaptability = adaptability;
     }
     
-    public void die(int xLoc, int yLoc, Person[][] map, int level){
+    public void die(int xLoc, int yLoc, Person[][] map, int level, int wealth){
 	    if(age >= strength || energy == 0){
     			map[xLoc][yLoc] = null;
     	    		colony.setPopulation(colony.getPopulation() - 1);
     	    		return;
 	    }
-    		if(disease == 1){
-	        strength--;
-	        colony.setStrength(colony.getStrength() - 1);
+	    boolean isEnergyModified = false;
+	    if(swimAngle != -1){
+			colony.setEnergy(colony.getEnergy() - energy*0.04);
+			energy = energy*0.96;
+			isEnergyModified = true;
 	    }
-		if(disease == 2){
-	        energy--;
-	        colony.setEnergy(colony.getEnergy() - 1);
+	    if(disease[0]) {
+	    	colony.setEnergy(colony.getEnergy() - energy + energy*((this.adaptability - wealth) * 0.2));
+			energy = energy*((this.adaptability - wealth) * 0.2);
+	    	isEnergyModified = true;
 	    }
-		if(swimAngle != -1){
-	        energy--;
-	        colony.setEnergy(colony.getEnergy() - 1);
+		if(disease[1]){
+			colony.setStrength(colony.getStrength() - strength*0.04);
+        strength = strength*0.96;
 	    }
+		if(disease[3]){
+			colony.setEnergy(colony.getEnergy() - energy*0.04);
+			energy = energy*0.96;
+			isEnergyModified = true;
+    	}
+		if(disease[4]){
+			colony.setStrength(colony.getStrength() - strength*0.42);
+		    strength = strength*0.58;
+		    for(int x = -3; x < 4; x++) {
+	        	if(xLoc + x >= 1357 || xLoc + x <= 0) {
+    				break;
+    			}
+        		for(int y = -3; y < 4; y++) {
+        			if(yLoc + y >= 628 || yLoc + y <= 0) {
+        				break;
+        			}
+        			if(map[xLoc + x][yLoc + y] != null && map[xLoc + x][yLoc + y].colony == colony) {
+        				map[xLoc + x][yLoc + y].disease[4] = true;
+        			}
+		        }
+	        }
+	    }
+		if(isEnergyModified == false && Math.round(energy) <= Math.round(maxEnergy)) {
+			colony.setEnergy(colony.getEnergy() + energy*0.05);
+			energy = energy*1.05;
+		}
+    		
 		if(level % YEAR_TIME == 0) {
 			age++;
 			colony.setAge(colony.getAge() + 1);
 		}
-		if(level % colony.getReproductionCycle() == 0) {
-			if(reproductionCycle > -1) {
-				reproductionCycle--;
-			}
+		if(reproductionCycle > -1) {
+			reproductionCycle--;
 		}
-		if(disease == 3){
-	        strength-=20;
-	        for(int x = -3; x < 4; x++) {
-		        	if(xLoc + x >= 1357 || xLoc + x <= 0) {
-	    				break;
-	    			}
-	        		for(int y = -3; y < 4; y++) {
-	        			if(yLoc + y >= 628 || yLoc + y <= 0) {
-	        				break;
-	        			}
-	        			if(map[xLoc + x][yLoc + y] != null && map[xLoc + x][yLoc + y].colony == colony) {
-	        				map[xLoc + x][yLoc + y].disease = 3;
-	        			}
-		        }
-	        }
-	    }
 	}
     
-    public void move(int xLoc, int yLoc, Person[][] map, WorldGraphics frame){
+    public void move(int xLoc, int yLoc, Person[][] map, WorldGraphics frame, int wealth, ArrayList<Colony> colonies){
 	    	if(swimAngle == -1) {
 	        Random random = new Random(); 
 	        int dir;
-	        int x = 0, y = 0, i = 0, angle = 0;
+	        int x = 0, y = 0, i = 0, angle = 0, xFight = 0, yFight = 0;
 	        dir = random.nextInt(8)+1;
 	        for(i =0; i < 8; i++){
 	            switch(dir){
@@ -139,12 +154,16 @@ public class Person {
 	            if((xLoc + x >= WIDTH || yLoc + y >= HEIGHT) || (xLoc + x <= 0 || yLoc + y <= 0)) {
 	                return;
 	            }
-	            Colony col = null;
-	            if(map[xLoc + x][yLoc + y] != null) {col =  map[xLoc + x][yLoc + y].colony;}
+	            //Colony col = null;
+	            //if(map[xLoc + x][yLoc + y] != null) {col =  map[xLoc + x][yLoc + y].colony;}
 	            
-	            if (frame.getColor(xLoc + x, yLoc + y) == 2 
-	                    && (map[xLoc + x][yLoc + y] == null)){
-	            		break;
+	            if (frame.getColor(xLoc + x, yLoc + y) == 2) {
+	                if (map[xLoc + x][yLoc + y] == null){
+	            			break;
+	                } else if (!colony.equals(map[xLoc + x][yLoc + y].colony)) {
+	                	xFight = x;
+	                	yFight = y;
+	                }
 	            }else if(frame.getColor(xLoc + x, yLoc + y) == 1 && random.nextInt(500) + 1 == 1 
 	            			&& map[xLoc + x][yLoc + y] == null) {
 	            		swimAngle = angle;
@@ -157,15 +176,22 @@ public class Person {
 	            }
 	        }
 	        if(swimAngle == -1) {
-	        		Colony col = null;
-	            if(map[xLoc + x][yLoc + y] != null) {col =  map[xLoc + x][yLoc + y].colony;}
-		        if(i<8){
-		            if(map[xLoc + x][yLoc + y] == null){
-		                map[xLoc + x][yLoc + y] = map[xLoc][yLoc];
-		                map[xLoc][yLoc] = null;
-		            }else if(colony != map[xLoc + x][yLoc + y].colony){
-		            		fight(xLoc, yLoc, xLoc + x, yLoc + y, map);
-		            }
+	        	
+	        		//if(map[xLoc + x][yLoc + y] != null) {	System.out.println(colonies.indexOf(colony) +" "+ colonies.indexOf(map[xLoc + x][yLoc + y].colony));}
+		        if(map[xLoc + x][yLoc + y] == null){
+	                map[xLoc + x][yLoc + y] = map[xLoc][yLoc];
+	                map[xLoc][yLoc] = null;
+		        }//else if(colonies.indexOf(colony) != colonies.indexOf(map[xLoc + x][yLoc + y].colony)){
+		        else if(xFight != 0 || yFight != 0){
+            			fight(xLoc, yLoc, xLoc + xFight, yLoc + yFight, map);
+	            }
+		        
+		        if((int)this.adaptability == wealth) {
+		        	adaptability = wealth;
+		        }else if((int)adaptability != wealth) {
+		        	adapt(wealth);
+		        }else {
+		        	this.disease[0] = false;
 		        }
 	        }else {
 	        		swim(xLoc, yLoc, map, frame);
@@ -177,20 +203,23 @@ public class Person {
     
     public int fight(int locX1, int locY1, int locX2, int locY2, Person[][] map){
     		double str1, str2;
-        str1 = (experience * 2 + strength * 3 + age * 2 + energy * 3)/10;
-        str2 = (map[locX2][locY2].experience * 2 + map[locX2][locY2].strength * 4 
-                + map[locX2][locY2].age * 2 + map[locX1][locY1].energy * 2)/10;
+        str1 = (experience * 2.0 + strength * 3.0 + (strength - age) * 2.0+ energy * 3.0)/10.0;
+        str2 = (map[locX2][locY2].experience * 2.0 + map[locX2][locY2].strength * 3.0 
+                + (map[locX2][locY2].strength - map[locX2][locY2].age) * 2.0 + map[locX1][locY1].energy * 3.0)/10.0;
         if(str1 > str2){
             map[locX1][locY1].experience++;
+            map[locX2][locY2].colony.setPopulation(map[locX2][locY2].colony.getPopulation() - 1);
             map[locX2][locY2] = map[locX1][locY1];
             map[locX1][locY1] = null;
-    	    		colony.setPopulation(colony.getPopulation() - 1);
+            
+
             return 1;
         }else if(str1 < str2){
             map[locX2][locY2].experience++;
+            map[locX1][locY1].colony.setPopulation(map[locX1][locY1].colony.getPopulation() - 1);
             map[locX1][locY1] = map[locX2][locY2];
             map[locX2][locY2] = null;
-    	    		colony.setPopulation(colony.getPopulation() - 1);
+            
             return 2;
         }
         map[locX2][locY2] = null;
@@ -221,18 +250,35 @@ public class Person {
 			if(frame.getColor(x, y) == 2) {
 				swimAngle = -1;
 			}
-		}else if(colony != map[x][y].colony){
-            fight(xLoc, yLoc, x, y, map);
+		}else{
+            swimAngle = swimAngle + 180;
+            if(swimAngle < 360) {
+            		swimAngle = swimAngle - 360;
+            }
         }
     }
     
-    public void reproduction(int xLoc, int yLoc, int generation, Person[][] map, WorldGraphics frame){
+    public void adapt(int wealth) {
+    		if(wealth < this.adaptability) {
+    			Random random = new Random();
+        		if((int)(adaptability - wealth) == random.nextInt(7)) {
+        			this.disease[0] = true;
+        		}
+    			this.adaptability -= 0.5;
+    		}else {
+    			this.adaptability += 1;
+    			colony.setEnergy(colony.getEnergy() + energy - energy*(((wealth - this.adaptability) * 0.02 + 1)));
+    			energy = energy*((wealth - this.adaptability) * 0.02 + 1);
+    		}
+    }
+    
+    public void reproduction(int xLoc, int yLoc, int generation, Person[][] map, WorldGraphics frame, int wealth, EvolutionSimulator evSim){
         if(map[xLoc][yLoc] != null){
             if(isReproduction()){
                 Random random = new Random(); 
                 int dir;
                 int x = 0, y = 0, j = 0;
-                dir = random.nextInt(9-1)+1;
+                dir = random.nextInt(8)+1;
                 for(j =0; j < 8; j++){
                     switch(dir){
                         case 1:
@@ -280,7 +326,7 @@ public class Person {
                     }
                 }
                 double maxS = 0;
-                int maxE = 0;
+                double maxE = 0;
                 double maxD = 0;
                 for(int xa = -10; xa < 11; xa++){
                     for(int ya = -10; ya < 11; ya++){
@@ -295,24 +341,33 @@ public class Person {
                                 ){
                             maxS = map[xLoc + xa][yLoc + ya].strength;
                             maxE = map[xLoc + xa][yLoc + ya].maxEnergy;
-                            maxD = map[xLoc + xa][yLoc + ya].disease;
+	                    	   if(map[xLoc + xa][yLoc + ya].disease[1]) {
+	                                maxD = 1;
+                            }else if(map[xLoc + xa][yLoc + ya].disease[2]) {
+                                maxD = 0.5;
+                            }else if(map[xLoc + xa][yLoc + ya].disease[4]) {
+                            	   maxD = 3;
+	                        }else {
+	                        	   maxD = 0;
+	                        }
                         }
                     }
                 }
                 if(maxS != 0 && j<8){
                 	    double str = (strength + maxS)/2 + mutation(generation);
-                	    int en = (maxEnergy + maxE)/2 + (int) mutation(generation);
+                	    double en = (maxEnergy + maxE)/2 + mutation(generation);
                 	    //reproductionCycle = 0;
                 	    colony.setPopulation(colony.getPopulation() + 1);
                 	    reproductionCycle = colony.getReproductionCycle();
-                	    colony.setStrength(colony.getStrength() + (int)Math.round(str));
+                	    colony.setStrength(colony.getStrength() + Math.round(str));
                 	    colony.setEnergy(colony.getEnergy() + en);
                     Person newBorn = new Person(0, str, random.nextBoolean(), 
-                    				colony, 0, diseaseChild(disease, 
-                            		maxD), en, en, -1, -1);
-                    if(random.nextInt(400000) == 0){
-                    		newBorn.disease = 3;
-                    }
+                    				colony, 0, diseaseChild(maxD), en, en, -1, -1, wealth);
+                    if(evSim.isEpidemics) {
+	                    if(random.nextInt(400000) == 0){
+	                    		newBorn.disease[4] = true;
+	                    }
+	                }
                     map[xLoc + x][yLoc +y] = newBorn;
                 }
             }
@@ -352,37 +407,59 @@ public class Person {
         }
     }
     
-    public double diseaseChild(double feDisease, double maDisease){
-	    		if(feDisease != 3 && maDisease != 3) {
-			Random random = new Random();
-			if(feDisease == 2) {feDisease = 0;}
-			if(maDisease == 2) {maDisease = 0;}
-			if(feDisease == 0 && maDisease == 0) {
-				return 0;
-			}else if(feDisease == 1 && maDisease == 1) {
-				return 1;
-			}else if((feDisease == 1 && maDisease == 0.5) || (maDisease == 1 && feDisease == 0.5)) {
-				return 0.5;
-			}else if((feDisease == 0.5 && maDisease == 0) || (maDisease == 0.5 && feDisease == 0)) {
+    public boolean[] diseaseChild(double maDisease){
+    		double feDisease; 
+    		if(disease[1]) {
+    			feDisease = 1;
+	    }else if(disease[2]) {
+	    		feDisease = 0.5;
+	    }else if(disease[4]) {
+	    		feDisease = 3;
+	    }else {
+	    		feDisease = 0;
+	    }
+    		boolean[] Disease = new boolean[5];
+    		for(int i = 0; i < 5; i++) {
+    			Disease[i] = false;
+    		}
+	    	if(feDisease == 3 || maDisease == 3) {
+	    		Disease[4] = true;
+	    	}
+	    	
+		Random random = new Random();
+		if(feDisease == 0 && maDisease == 0) {
+			return Disease;
+		}else if(feDisease == 1 && maDisease == 1) {
+			Disease[1] = true;
+			return Disease;
+		}else if((feDisease == 1 && maDisease == 0.5) || (maDisease == 1 && feDisease == 0.5)) {
+			if(random.nextBoolean()) {
+				Disease[	1] = true;
+				return Disease;
+			}else {
+				Disease[2] = true;
+				return Disease;
+			}
+		}else if((feDisease == 0.5 && maDisease == 0) || (maDisease == 0.5 && feDisease == 0)) {
+			if(random.nextBoolean()) {
+				return Disease;
+			}else {
+				Disease[2] = true;
+				return Disease;
+			}
+		}else if(feDisease == 0.5 && maDisease == 0.5) {
+			if(random.nextBoolean()) {
+				Disease[2] = true;
+				return Disease;
+			}else {
 				if(random.nextBoolean()) {
-					return 0;
+					return Disease;
 				}else {
-					return 0.5;
-				}
-			}else if(feDisease == 0.5 && maDisease == 0.5) {
-				if(random.nextBoolean()) {
-					return 0.5;
-				}else {
-					if(random.nextBoolean()) {
-						return 0;
-					}else {
-						return 1;
-					}
+					Disease[1] = true;
+					return Disease;
 				}
 			}
-			return 1;
-    		}else {
-    			return 3;
-    		}
+		}
+		return Disease;
     }
 }
