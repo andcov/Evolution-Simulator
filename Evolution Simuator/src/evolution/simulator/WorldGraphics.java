@@ -5,9 +5,9 @@
  */
 package evolution.simulator;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.MouseInfo;
@@ -20,7 +20,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import org.apache.commons.lang.mutable.MutableInt;
 
 public class WorldGraphics extends JFrame {
 	//static Graph graph;
@@ -54,8 +53,7 @@ public class WorldGraphics extends JFrame {
         this.evSimulator = evSimulator;
         map = new Map();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //setLayout(new BorderLayout());
-        setLayout(new FlowLayout());
+        setLayout(new BorderLayout());
         getContentPane().add(map);
         pack();
         setLocationRelativeTo(null);
@@ -130,7 +128,7 @@ public class WorldGraphics extends JFrame {
         
         public Map() {
             try {
-                img = ImageIO.read(new File("C:\\Users\\Andrei\\git\\Evolution-Simulator\\Evolution Simuator\\additional\\map.png"));        
+                img = ImageIO.read(new File("/Users/test/Documents/GitHub/Evolution-Simulator/Evolution Simuator/additional/map.png"));        
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
