@@ -5,98 +5,110 @@
  */
 package evolution.simulator;
 
-import java.awt.MouseInfo;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.mutable.MutableInt;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
 /**
  *
  * @author AndreiCo
  */
 
+// it contains the logic of the application
 public class EvolutionSimulator
 {
+	// map dimensions
 	public final static int WIDTH = 1357;
 	public final static int HEIGHT = 628;
-    private static final int YEAR_TIME = 12;
+	
+	// graph info
     public int[][] populationGraph;
 
+    // enable/disable external factors
 	public boolean isEpidemics;
 	public boolean isEarthquake;
-	Configuration config;
+	
+	// current iteration in evolution
 	MutableInt level;
+	private int localLevel = 0;
+	
+	// array of individuals
     Person[][] mapPerson;
+    
+    // array of zones of wealth
     int[][] mapWealth;
-    NaturalDisaster eq;
+    
+    // earthquake object
+    NaturalDisaster earthquake;
+    
+    // graphical representation
     WorldGraphics frame;
+    
+    // the list of all colonies
     ArrayList<Colony> colonies;
     
-    private int[] col = new int[4];
-    private int localLevel = 0;
-    
     public static void main(String[] args) throws InterruptedException{
-    	EvolutionSimulator evsim = new EvolutionSimulator();	
+    		EvolutionSimulator evsim = new EvolutionSimulator();	
         evsim.placeColonies();
+        
         TimeUnit.MILLISECONDS.sleep(3000);
+        
         while(true) {
-        	evsim.run();
-        	//TimeUnit.MILLISECONDS.sleep(50);
+        		evsim.run();
+        		TimeUnit.MILLISECONDS.sleep(50);
         }   
     }  
 
+    // constructor - initialize all of the world's characteristics
     public EvolutionSimulator(){
-    	level = new MutableInt(0);
+    		level = new MutableInt(0);
         mapPerson = new Person[WIDTH][HEIGHT];
-        config = new Configuration();
-        isEpidemics = config.isEpidemics();
-        isEarthquake = config.isEarthquake();
-        eq = new NaturalDisaster();
+        isEpidemics = Configuration.isEpidemics();
+        isEarthquake = Configuration.isEarthquake();
+        earthquake = new NaturalDisaster();
         colonies = Configuration.initColonies();
         mapWealth = Configuration.initWealth();
-        frame = new WorldGraphics(this);
-        populationGraph = new int[frame.GRAPH_SIZE][colonies.size() + 1];
-    	for(int i = 0; i < frame.GRAPH_SIZE; i++) {
-    		for(int j = 0; j < colonies.size(); j++) {
-    			populationGraph[i][j] = 0;
-    		}
-    		populationGraph[i][colonies.size()] = -1;
+        populationGraph = new int[WorldGraphics.GRAPH_SIZE][colonies.size() + 1];
+	    	for(int i = 0; i < WorldGraphics.GRAPH_SIZE; i++) {
+	    		for(int j = 0; j < colonies.size(); j++) {
+	    			populationGraph[i][j] = 0;
+	    		}
+	    		populationGraph[i][colonies.size()] = -1;
 	    }
+	    	frame = new WorldGraphics(this);
     }
     
+    //runs the simulation
     public void run() {
-    	int i = 0;
-    	i++;
-    	//evolution life cycle
-        while(!frame.isPaused){
-        	ppGraph();
-        	
-        	//aging and dying
+    		//evolution life cycle
+        while(!WorldGraphics.isPaused){
+        		populationGraph();
+        		// evolving and dying
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
-                    if(mapPerson[x][y] != null){           		
-                		Random random = new Random();
-                		if(random.nextInt(100)+1 == 1 || random.nextInt(100)+1 == 2){
-                			mapPerson[x][y].disease[3] = true;
-                		} 
+                    if(mapPerson[x][y] != null){
+                    		// randomly get energy disease
+	                		Random random = new Random();
+	                		if(random.nextInt(100)+1 <= 2){
+	                			mapPerson[x][y].disease[3] = true;
+	                		} 
+	                		
+	                		// die because of earthquakes
                         if(isEarthquake) {
-	                        if(eq.eq == true && (x > eq.x  && x< eq.x + eq.size) && 
-	                        			(y > eq.y  && y < eq.y + eq.size)) {
+	                        if(earthquake.eq == true && (x > earthquake.x  && x< earthquake.x + earthquake.size) && 
+	                        			(y > earthquake.y  && y < earthquake.y + earthquake.size)) {
 	                        		mapPerson[x][y] = null;
 	                        }
                         }
-                		if(mapPerson[x][y] != null) {
-                			mapPerson[x][y].die(x, y, mapPerson, level.toInteger(), mapWealth[x][y]); // NullPointer error, probably because of earthquakes
-                		}
+                        
+	                		if(mapPerson[x][y] != null) {
+	                			mapPerson[x][y].evolve(x, y, mapPerson, level.toInteger(), mapWealth[x][y]); // NullPointer error, probably because of earthquakes
+	                		}
                     }
                 }
             }
+            
             //moving
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
@@ -106,6 +118,7 @@ public class EvolutionSimulator
                     
                 }
             }
+            
             //reproduction 
             for(int x = 0; x<WIDTH; x++){
                 for(int y = 0; y<HEIGHT; y++){
@@ -116,10 +129,9 @@ public class EvolutionSimulator
             		}
                 }
             }
+            
             //draw
             frame.repaint();
-            
-            
             
             try {
 				TimeUnit.MILLISECONDS.sleep(50);
@@ -127,36 +139,51 @@ public class EvolutionSimulator
 				e.printStackTrace();
 			}
             
+            // iterate
             localLevel++;
             level.setValue(localLevel);
         }
     }
     
+    // restart the simulation
     public void restart() {
-    	frame.isPaused = true;
+    		WorldGraphics.isPaused = true;
         try {
 			TimeUnit.MILLISECONDS.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-    	for(int x = 0; x < this.WIDTH; x++) {
-    		for(int y = 0; y < this.HEIGHT; y++) {
-        		mapPerson[x][y] = null;
-        	}
-    	}
-    	level.setValue(0);
-    	localLevel = 0;
-    	colonies = Configuration.initColonies();
-    	for(int i = 0; i < frame.GRAPH_SIZE; i++) {
-    		for(int j = 0; j < colonies.size(); j++) {
-    			populationGraph[i][j] = 0;
-    		}
-    		populationGraph[i][colonies.size()] = -1;
+        
+        // delete previous individuals
+	    	for(int x = 0; x < WIDTH; x++) {
+	    		for(int y = 0; y < HEIGHT; y++) {
+	        		mapPerson[x][y] = null;
+	        	}
+	    	}
+	    	
+	    	// reset iteration
+	    	level.setValue(0);
+	    	localLevel = 0;
+	    	
+	    	// read configuration file again
+	    	colonies = Configuration.initColonies();
+	    	mapWealth = Configuration.initWealth();
+	    	
+	    	//reset graph
+	    	for(int i = 0; i < WorldGraphics.GRAPH_SIZE; i++) {
+	    		for(int j = 0; j < colonies.size(); j++) {
+	    			populationGraph[i][j] = 0;
+	    		}
+	    		populationGraph[i][colonies.size()] = -1;
 	    }
-    	placeColonies();
-        frame.isPaused = false;
+	    	
+	    	//replace individuals
+	    	placeColonies();
+	    	
+        WorldGraphics.isPaused = false;
     }
     
+    // place initial individuals
     public void placeColonies(){
         Random random = new Random();
         int x, y;
@@ -169,12 +196,12 @@ public class EvolutionSimulator
                 }while(frame.getColor(x, y) == 1 && mapPerson[x][y] == null);
                 en = random.nextInt(Math.abs((int)col.getEnergy()))+15;
                 mapPerson[x][y] = new Person(0, random.nextInt(Math.abs((int)col.getStrength()))+5, i < col.getFemalePopulation(), col, 
-                		0, diseaseRandom(), en, en, -1, -col.getReproductionCycle(), mapWealth[x][y]);
+                		0, diseaseRandom(), en, en, -1, col.getReproductionCycle(), mapWealth[x][y]);
             }
         }
-        //frame.repaint();
     }
     
+    // randomly infect with disease
     public boolean[] diseaseRandom() {
     		Random random = new Random();
     		boolean[] Disease = new boolean[5];
@@ -191,6 +218,7 @@ public class EvolutionSimulator
     		return Disease;
     }
 
+    // choose person location near a point
     public int exponential(int min, int max, int limit){
         Random random = new Random();
         double distance = 0;
@@ -212,36 +240,9 @@ public class EvolutionSimulator
         return (int)distance;
     }
     
-    public void earthquake() {
-    		int magnitude  = exponential(0, 8, 2);
-    		int x, y;
-    		switch(magnitude) {
-    			case 4:
-    				x = 1;
-    				y = 1;
-    				break;
-    			case 5:
-    				x = 3;
-    				y = 3;
-    				break;
-    			case 6:
-    				x = 10;
-    				y = 10;
-    				break;
-    			case 7:
-    				x = 30;
-    				y = 30;
-    				break;
-    			case 8:
-    				x = 50;
-    				y = 200;
-    				break;
-    		}
-    		
-    }
-    
-    private void ppGraph() {
-        for(int i = 1; i < frame.GRAPH_SIZE; i++) {
+    // calculate graphic statistics
+    private void populationGraph() {
+        for(int i = 1; i < WorldGraphics.GRAPH_SIZE; i++) {
 	    		for(int j = 0; j < colonies.size()+1; j++) {
 	    			populationGraph[i-1][j] = populationGraph[i][j];
 	    		}
@@ -255,19 +256,19 @@ public class EvolutionSimulator
 	    double sum100 = 0;
 		for(int i = 0; i < colonies.size(); i++) {
 			Colony colony = colonies.get(i);
-            populationGraph[frame.GRAPH_SIZE-1][i] = colony.getPopulation() * 100 / totalPopulation;	
-            sum100 += populationGraph[frame.GRAPH_SIZE-1][i];
-            if (max < populationGraph[frame.GRAPH_SIZE-1][i]) {
-            		max = populationGraph[frame.GRAPH_SIZE-1][i];
+            populationGraph[WorldGraphics.GRAPH_SIZE-1][i] = colony.getPopulation() * 100 / totalPopulation;	
+            sum100 += populationGraph[WorldGraphics.GRAPH_SIZE-1][i];
+            if (max < populationGraph[WorldGraphics.GRAPH_SIZE-1][i]) {
+            		max = populationGraph[WorldGraphics.GRAPH_SIZE-1][i];
             		iMaxPos = i;
             }
             
 		}
-		populationGraph[frame.GRAPH_SIZE-1][iMaxPos] += - sum100 + 100;
-		if(level.toInteger() % YEAR_TIME == 0) {
-			populationGraph[frame.GRAPH_SIZE-1][colonies.size()] = level.toInteger() / YEAR_TIME;
+		populationGraph[WorldGraphics.GRAPH_SIZE-1][iMaxPos] += - sum100 + 100;
+		if(level.toInteger() % 10 == 0) {
+			populationGraph[WorldGraphics.GRAPH_SIZE-1][colonies.size()] = level.toInteger();
 		}else {
-			populationGraph[frame.GRAPH_SIZE-1][colonies.size()] = -1;
+			populationGraph[WorldGraphics.GRAPH_SIZE-1][colonies.size()] = -1;
 		}
 		 
     }

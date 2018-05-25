@@ -3,6 +3,7 @@ package evolution.simulator;
 import java.awt.Color;
 import java.util.Random;
 
+// natural disasters ( only earthquakes at the moment )
 public class NaturalDisaster {
 	public  int size;
 	public  int x;
@@ -13,6 +14,7 @@ public class NaturalDisaster {
 	private  int times = 3;
 	public  Color color = new Color(139,69,19);
 	
+	// create and move earthquakes
 	public void earthquake() {
 		Random ran = new Random();
 		int chance = ran.nextInt(1000);
@@ -44,21 +46,21 @@ public class NaturalDisaster {
 			ux = x;
 			uy = y;
 		}else if(eq == true){
-			int deX = ran.nextInt(5) + 1;
-			int deY = ran.nextInt(5) + 1;
-			boolean diX = ran.nextBoolean();
-			boolean diY = ran.nextBoolean();
+			int deviationX = ran.nextInt(5) + 1;
+			int deviationY = ran.nextInt(5) + 1;
+			boolean isMoveX = ran.nextBoolean();
+			boolean isMoveY = ran.nextBoolean();
 			
-			if(diX && x + deX < 1357) {
-				ux = x + deX;
+			if(isMoveX && x + deviationX < 1357) {
+				ux = x + deviationX;
 			}else {
-				ux = x - deX;
+				ux = x - deviationX;
 			}
 			
-			if(diY && x + deY < 1357) {
-				uy = y + deY;
+			if(isMoveY && x + deviationY < 1357) {
+				uy = y + deviationY;
 			}else {
-				uy = y - deY;
+				uy = y - deviationY;
 			}
 			times--;
 			if(times == 1) {

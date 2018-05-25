@@ -16,9 +16,14 @@ public class Colony {
 	
 	private Color color;
 	private int population;
+	
+	// a point around which the colony forms
 	private int xPosition;
-	private int yPosition;	
+	private int yPosition;
+	
 	private int femalePopulation;
+	
+	//the minimum number of iterations between pregnancies
 	private int reproductionCycle;
 	private double strength;
 	private double energy;

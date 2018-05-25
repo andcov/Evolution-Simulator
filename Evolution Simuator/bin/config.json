@@ -1,103 +1,27 @@
 {
     "colonies": [
         {
-        	"_comment": "red",
+            "_comment": "red",
         
             "colorRed": "255",
             "colorGreen": "0",
             "colorBlue": "0",
             "population": "90",
-            "xPosition": "830",
-            "yPosition": "180",
+
+            "xPosition": "885",
+            "yPosition": "139",
             
-            "femalePopulation": "45",
-            "reproductionCycle": "2",
-            "strength": "40",
-            "energy": "15"
-        },
-        {
-        	"_comment": "yellow",
-        	
-            "colorRed": "255",
-            "colorGreen": "255",
-            "colorBlue": "0",
-            "population": "90",
-            "xPosition": "910",
-            "yPosition": "180",
-
-            "femalePopulation": "45",
-            "reproductionCycle": "2",
-            "strength": "40",
-            "energy": "15"
-        },
-        {
-        	"_comment": "pink",
-        
-            "colorRed": "255",
-            "colorGreen": "105",
-            "colorBlue": "180",
-            "population": "90",
-            "xPosition": "910",
-            "yPosition": "120",
-
-            "femalePopulation": "45",
-            "reproductionCycle": "2",
-            "strength": "40",
-            "energy": "15"
-        },
-        {
-        	"_comment": "black",
-        
-            "colorRed": "0",
-            "colorGreen": "0",
-            "colorBlue": "0",
-            "population": "90",
-            "xPosition": "830",
-            "yPosition": "120",
-
-            "femalePopulation": "45",
-            "reproductionCycle": "2",
+            "femalePopulation": "20",
+            "reproductionCycle": "8",
             "strength": "40",
             "energy": "15"
         },
     ],
     
     "earthquake": "off",
-    "epidemics": "on",
+    "epidemics": "off",
     
-    "defaultWealth": "3",
+    "defaultWealth": "2",
     "wealthRegions": [
-        {
-            "_comment": "sahara",
-            "wealth": "1",
-            "xTopLeft": "490",
-            "yTopLeft": "231",
-            "xBottomRight": "728",
-            "yBottomLeft": "344",
-        },
-        {
-            "_comment": "south europe",
-            "wealth": "4",
-            "xTopLeft": "510",
-            "yTopLeft": "150",
-            "xBottomRight": "707",
-            "yBottomLeft": "226",
-        },
-        {
-            "_comment": "north europe and north asia",
-            "wealth": "2",
-            "xTopLeft": "585",
-            "yTopLeft": "35",
-            "xBottomRight": "1184",
-            "yBottomLeft": "130",
-        },
-        {
-            "_comment": "australia",
-            "wealth": "2",
-            "xTopLeft": "1012",
-            "yTopLeft": "413",
-            "xBottomRight": "1198",
-            "yBottomLeft": "571",
-        },
     ]
 }

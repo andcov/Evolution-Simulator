@@ -80,7 +80,7 @@ public class Configuration
         	    col.setxPosition(Integer.parseInt((String) jsonColony.get("xPosition")));
         	    col.setyPosition(Integer.parseInt((String) jsonColony.get("yPosition")));
         	    col.setFemalePopulation(Integer.parseInt((String) jsonColony.get("femalePopulation")));
-        	    col.setReproductionCycle(-1/*Integer.parseInt((String)jsonColony.get("reproductionCycle"))*/);
+        	    col.setReproductionCycle(Integer.parseInt((String)jsonColony.get("reproductionCycle")));
         	    col.setStrength(Integer.parseInt((String) jsonColony.get("strength")));
         	    col.setEnergy(Integer.parseInt((String) jsonColony.get("energy")));
         	    colonies.add(col);
